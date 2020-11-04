@@ -3,7 +3,7 @@ const { crypt, port_no } = require('./config/constants');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const auth = require('./auth/verifyToken');
-const indexRouter = require('./router/loginOrRegister');
+const indexRouter = require('./router/index');
 
 var app = express();
 

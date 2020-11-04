@@ -4,7 +4,7 @@ const config = require('../config/config');
 const constants = require('../config/constants');
 const { Connection } = require('../connection');
 const client = Connection.connectToMongo();
-
+const uuidv1 = require('uuid/v1');
 
 
 module.exports = {
@@ -34,6 +34,7 @@ function getRefreshToken(payload) {
             // check if there are 4 (for multiple platform) or more refresh tokens,
             // which have already been generated. In this case we should
             // remove all this refresh tokens 
+            console.log(userRefreshTokens);
             if (userRefreshTokens.length >= 4) {
                 tokens.deleteMany({ userId: payload.id });
             }

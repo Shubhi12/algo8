@@ -8,6 +8,7 @@ const client = Connection.connectToMongo();
 const jwtService = require('../auth/jwt');
 const jwt = require('jsonwebtoken');
 var ObjectId = require('mongodb').ObjectID;
+const uuidv1 = require('uuid/v1');
 
 
 
@@ -46,7 +47,7 @@ function register(req, res, next) {
                 //hash the password with bcrypt
                 const saltRounds = 10;
                 const passwordHash = bcrypt.hashSync(userData.password, saltRounds);
-                users.insert({ email: userData.email, username: userData.username, password: passwordHash }, function(err, data) {
+                users.insert({ email: userData.email, username: userData.username, password: passwordHash, userId: uuidv1() }, function(err, data) {
                     if (err) {
                         commonHelper.sendJson(res, {}, constants.TRUE, 'Something went Wrong!!!', constants.SUCCESS, 1);
                     } else {
@@ -96,7 +97,7 @@ function login(req, res, next) {
             } else {
                 if (bcrypt.compareSync(userData.password, data.password)) {
                     const payload = {
-                        id: data._id,
+                        id: data.userId,
                         email: data.email,
                         username: data.username
                     };
@@ -140,20 +141,21 @@ async function refreshToken(req, res, next) {
             let users = db.collection('users');
             // get decoded data
             const decodedToken = jwt.verify(refreshToken, config[constants.env].secret);
+            //console.log(decodedToken);
             // find the user in the user table
             new Promise((resolve, reject) => {
-                users.findOne({ email: decodedToken.user.email }, function(err, data) {
+                users.findOne({ userId: decodedToken.user.id }, function(err, data) {
                     if (err)
                         reject('Access forbidden');
                     else
                         resolve(data);
                 });
             }).then(user => {
+                //console.log(user);
                 // get all user's refresh tokens from DB
-                new Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     let tokens = db.collection('tokens');
-
-                    tokens.find({ 'userId': ObjectId(user._id) }).toArray(function(err, data) {
+                    tokens.find({ userId: user.userId }).toArray(function(err, data) {
                         if (err)
                             reject(err);
                         else
@@ -161,21 +163,25 @@ async function refreshToken(req, res, next) {
                     });
                 });
             }).then(allRefreshTokens => {
-                console.log(allRefreshTokens);
                 if (!allRefreshTokens || !allRefreshTokens.length) {
                     throw new Error('No Refresh Token Exists');
                 }
-                const currentRefreshToken = allRefreshTokens.find(refreshToken => refreshToken.refreshToken === refreshToken);
 
-                if (!currentRefreshToken) {
-                    throw new Error(`Refresh token is wrong`);
+                let currentRefreshToken = 0;
+                allRefreshTokens.forEach(element => {
+                    currentRefreshToken = element.token.localeCompare(refreshToken);
+                });
+                //console.log(currentRefreshToken);
+                if (currentRefreshToken !== 0) {
+                    throw new Error('Refresh token is wrong');
                 }
                 // user's data for new tokens
                 const payload = {
-                    id: user._id,
-                    email: user.email,
-                    username: user.username
+                    id: decodedToken.user.id,
+                    email: decodedToken.user.email,
+                    username: decodedToken.user.username
                 };
+
                 // get new refresh and access token
                 const newRefreshToken = jwtService.getUpdatedRefreshToken(refreshToken, payload);
                 const newAccessToken = jwtService.getAccessToken(payload);

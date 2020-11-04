@@ -13,7 +13,7 @@ module.exports = {
  * @param {*} next 
  */
 function verifyToken(req, res, next) {
-    if (req.url == '/login' || req.url == '/register' || req.url == '/refreshToken') {
+    if (req.url == '/login' || req.url == '/register' || req.url == '/createCsv') {
         next();
     } else {
         var token = req.headers.authorization || req.query.token || req.body.token || req.headers.Authorization;

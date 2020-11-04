@@ -7,7 +7,12 @@
             "dialect": "mysql",
             "timezone": "+05:30",
             "mongodbUrl": "mongodb://127.0.0.1/local/",
-            "secret": "algo-TECH"
+            "secret": "algo-TECH",
+            "AWS": {
+                "AWS_ACCESS_KEY": "dummy",
+                "AWS_SECRET_KEY": "dummy",
+                "BUCKET": "dummy"
+            }
         },
         "test": {
             "username": "root",
@@ -17,7 +22,12 @@
             "dialect": "mysql",
             "timezone": "+05:30",
             "mongodbUrl": "mongodb://127.0.0.1/local/",
-            "secret": "algo-TECH"
+            "secret": "algo-TECH",
+            "AWS": {
+                "AWS_ACCESS_KEY": "dummy",
+                "AWS_SECRET_KEY": "dummy",
+                "BUCKET": "algo8"
+            }
         },
         "production": {
             "username": "root",
@@ -35,6 +45,11 @@
                 "acquire": 20000
             },
             "timezone": "+05:30",
-            "secret": "algo-TECH"
+            "secret": "algo-TECH",
+            "AWS": {
+                "AWS_ACCESS_KEY": "dummy",
+                "AWS_SECRET_KEY": "dummy",
+                "BUCKET": "algo8"
+            }
         }
     }

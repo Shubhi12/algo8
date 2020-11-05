@@ -17,37 +17,29 @@ function getAccessToken(payload) {
     return jwt.sign({ user: payload }, config[constants.env].secret, { expiresIn: 900 }); // expires in 15 mins
 }
 
-function getRefreshToken(payload) {
-    client.then(client => {
-        let db = client.db('local');
-        let tokens = db.collection('tokens');
-
-        new Promise((resolve, reject) => {
-            tokens.find({ userId: payload.id }).toArray(function(err, data) {
-                if (err)
-                    reject(err);
-                else
-                    resolve(data);
-            });
-        }).then((userRefreshTokens) => {
-
-            // check if there are 4 (for multiple platform) or more refresh tokens,
-            // which have already been generated. In this case we should
-            // remove all this refresh tokens 
-            console.log(userRefreshTokens);
-            if (userRefreshTokens.length >= 4) {
-                tokens.deleteMany({ userId: payload.id });
-            }
-
-            const refreshToken = jwt.sign({ user: payload }, config[constants.env].secret, { expiresIn: '30d' });
-
-            tokens.insert({ userId: payload.id, token: refreshToken });
-
-            return refreshToken;
-        }).catch((err) => {
-            console.log(err);
+async function getRefreshToken(payload, client) {
+    let db = client.db('local');
+    let tokens = db.collection('tokens');
+    const refreshToken = jwt.sign({ user: payload }, config[constants.env].secret, { expiresIn: '30d' });
+    await new Promise((resolve, reject) => {
+        tokens.find({ userId: payload.id }).toArray(function(err, data) {
+            if (err)
+                reject(err);
+            else
+                resolve(data);
         });
-    });
+    }).then((userRefreshTokens) => {
+
+        // check if there are 4 (for multiple platform) or more refresh tokens,
+        // which have already been generated. In this case we should
+        // remove all this refresh tokens 
+        if (userRefreshTokens.length >= 4) {
+            tokens.deleteMany({ userId: payload.id });
+        }
+
+        tokens.insert({ userId: payload.id, token: refreshToken });
+    }).catch(err => console.log(err));
+    return Promise.resolve(refreshToken);
 }
 
 function getUpdatedRefreshToken(oldRefreshToken, payload) {

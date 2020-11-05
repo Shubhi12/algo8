@@ -90,7 +90,7 @@ function login(req, res, next) {
                     resolve(res);
                 }
             });
-        }).then(data => {
+        }).then((data) => {
             if (!data) {
                 commonHelper.sendJson(res, {}, constants.TRUE, 'User Does not exsists. Please register first', constants.SUCCESS, 1);
                 return;
@@ -101,12 +101,12 @@ function login(req, res, next) {
                         email: data.email,
                         username: data.username
                     };
-
                     const accessToken = jwtService.getAccessToken(payload);
-                    const refreshToken = jwtService.getRefreshToken(payload);
-
-                    commonHelper.sendJson(res, { accessToken: accessToken, refreshToken: refreshToken, ...data }, constants.FALSE, 'Logged in Successfully', constants.SUCCESS, 1);
-                    return;
+                    //console.log(jwtService.getRefreshToken(payload, client));
+                    jwtService.getRefreshToken(payload, client).then(refreshToken => {
+                        commonHelper.sendJson(res, { accessToken: accessToken, refreshToken: refreshToken, ...data }, constants.FALSE, 'Logged in Successfully', constants.SUCCESS, 1);
+                        return;
+                    });
                 } else {
                     commonHelper.sendJson(res, {}, constants.TRUE, 'Password does not match', constants.SUCCESS, 1);
                     return;
